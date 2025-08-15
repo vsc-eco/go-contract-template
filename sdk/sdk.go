@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	_ "contract-template/runtime"
 	"encoding/json"
 	"strconv"
 )
@@ -13,23 +12,20 @@ func Log(s string) {
 	log(&s)
 }
 
-//go:wasmimport sdk db.set_object
+//go:wasmimport sdk db.setObject
 func stateSetObject(key *string, value *string) *string
 
-//go:wasmimport sdk db.get_object
+//go:wasmimport sdk db.getObject
 func stateGetObject(key *string) *string
 
-//go:wasmimport sdk db.rm_object
+//go:wasmimport sdk db.delObject
 func stateDeleteObject(key *string) *string
 
-//go:wasmimport sdk system.get_env
+//go:wasmimport sdk system.getEnv
 func getEnv(arg *string) *string
 
-//go:wasmimport sdk system.get_env_key
-func getEnvKey(arg *string) *string
-
-//go:wasmimport sdk hive.get_balance
-func getBalance(arg1 *string, arg2 *string) *int64
+//go:wasmimport sdk hive.getbalance
+func getBalance(arg1 *string, arg2 *string) *string
 
 //go:wasmimport sdk hive.draw
 func hiveDraw(arg1 *string, arg2 *string) *string
@@ -76,85 +72,64 @@ func StateDeleteObject(key string) {
 
 // Get current execution environment variables
 func GetEnv() Env {
-	envStr := *getEnv(nil)
+	// Per-key lookups via system.getEnv
+	get := func(key string) string { return *getEnv(&key) }
 	env := Env{}
-	// envMap := map[string]interface{}{}
-	json.Unmarshal([]byte(envStr), &env)
-	envMap := map[string]interface{}{}
-	json.Unmarshal([]byte(envStr), &envMap)
-
-	requiredAuths := make([]Address, 0)
-	for _, auth := range envMap["msg.required_auths"].([]interface{}) {
-		addr := auth.(string)
-		requiredAuths = append(requiredAuths, Address(addr))
+	env.ContractId = get("contract_id")
+	env.TxId = get("anchor.id")
+	env.BlockId = get("anchor.block")
+	if v := get("anchor.height"); v != "" {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			env.BlockHeight = n
+		}
 	}
-	requiredPostingAuths := make([]Address, 0)
-	for _, auth := range envMap["msg.required_posting_auths"].([]interface{}) {
-		addr := auth.(string)
-		requiredPostingAuths = append(requiredPostingAuths, Address(addr))
+	env.Timestamp = get("anchor.timestamp")
+	if v := get("anchor.tx_index"); v != "" {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			env.Index = uint64(n)
+		}
 	}
-
-	env.Sender = Sender{
-		Address:              Address(envMap["msg.sender"].(string)),
-		RequiredAuths:        requiredAuths,
-		RequiredPostingAuths: requiredPostingAuths,
+	if v := get("anchor.op_index"); v != "" {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			env.OpIndex = uint64(n)
+		}
 	}
-
-	// env.ContractId = envMap["contract.id"].(string)
-	// env.Index = envMap["tx.index"].(int64)
-	// env.OpIndex = envMap["tx.op_index"].(int64)
-
-	// for _, v := range envMap {
-	// 	switch v {
-	// 	case "contract.id":
-	// 		env.CONTRACT_ID = *_GET_ENV(&v)
-	// 	case "tx.origin":
-	// 		env.TX_ORIGIN = *_GET_ENV(&v)
-	// 	case "tx.id":
-	// 		env.TX_ID = *_GET_ENV(&v)
-	// 	case "tx.index":
-	// 		indexStr := *_GET_ENV(&v)
-	// 		index, err := strconv.Atoi(indexStr)
-	// 		if err != nil {
-	// 			Log("Das broken: " + err.Error())
-	// 			panic(fmt.Sprintf("Failed to parse index: %s", err))
-	// 		}
-	// 		env.INDEX = index
-	// 	case "tx.op_index":
-	// 		opIndexStr := *_GET_ENV(&v)
-	// 		opIndex, err := strconv.Atoi(opIndexStr)
-	// 		if err != nil {
-	// 			panic(fmt.Sprintf("Failed to parse op_index: %s", err))
-	// 		}
-	// 		env.OP_INDEX = opIndex
-	// 	case "block.id":
-	// 		env.BLOCK_ID = *_GET_ENV(&v)
-	// 	case "block.height":
-	// 		heightStr := *_GET_ENV(&v)
-	// 		height, err := strconv.ParseUint(heightStr, 10, 64)
-	// 		if err != nil {
-	// 			panic(fmt.Sprintf("Failed to parse block height: %s", err))
-	// 		}
-	// 		env.BLOCK_HEIGHT = height
-	// 	case "block.timestamp":
-	// 		env.TIMESTAMP = *_GET_ENV(&v)
-	// 	default:
-	// 		panic(fmt.Sprintf("Unknown environment variable: %s", v[0]))
-	// 	}
-	// }
+	// Sender/auths
+	sender := get("msg.sender")
+	var auths []string
+	var posting []string
+	if s := get("msg.required_auths"); s != "" {
+		_ = json.Unmarshal([]byte(s), &auths)
+	}
+	if s := get("msg.required_posting_auths"); s != "" {
+		_ = json.Unmarshal([]byte(s), &posting)
+	}
+	ra := make([]Address, 0, len(auths))
+	for _, a := range auths {
+		ra = append(ra, Address(a))
+	}
+	rpa := make([]Address, 0, len(posting))
+	for _, a := range posting {
+		rpa = append(rpa, Address(a))
+	}
+	env.Sender = Sender{Address: Address(sender), RequiredAuths: ra, RequiredPostingAuths: rpa}
 	return env
 }
 
 // Get current execution environment variable by a key
-func GetEnvKey(key string) *string {
-	return getEnvKey(&key)
-}
+// Deprecated: prefer GetEnv() which fetches keys individually
+func GetEnvKey(key string) *string { return getEnv(&key) }
 
 // Get balance of an account
 func GetBalance(address Address, asset Asset) int64 {
 	addr := address.String()
 	as := asset.String()
-	return *getBalance(&addr, &as)
+	res := getBalance(&addr, &as)
+	if res == nil {
+		return 0
+	}
+	v, _ := strconv.ParseInt(*res, 10, 64)
+	return v
 }
 
 // Transfer assets from caller account to the contract up to the limit specified in `intents`. The transaction must be signed using active authority for Hive accounts.
