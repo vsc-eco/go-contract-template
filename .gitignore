@@ -1,3 +1,6 @@
 .DS_Store
 main.wasm
 .env
+.cache
+.config
+go
