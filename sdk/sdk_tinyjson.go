@@ -427,6 +427,8 @@ func tinyjson223cdf42DecodeContractTemplateSdk3(in *jlexer.Lexer, out *Env) {
 		switch key {
 		case "contract.id":
 			out.ContractId = string(in.String())
+		case "contract.owner":
+			out.ContractOwner = string(in.String())
 		case "tx.id":
 			out.TxId = string(in.String())
 		case "tx.index":
@@ -486,6 +488,11 @@ func tinyjson223cdf42EncodeContractTemplateSdk3(out *jwriter.Writer, in Env) {
 		const prefix string = ",\"contract.id\":"
 		out.RawString(prefix[1:])
 		out.String(string(in.ContractId))
+	}
+	{
+		const prefix string = ",\"contract.owner\":"
+		out.RawString(prefix)
+		out.String(string(in.ContractOwner))
 	}
 	{
 		const prefix string = ",\"tx.id\":"
