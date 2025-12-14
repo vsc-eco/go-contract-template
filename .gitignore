@@ -4,3 +4,4 @@ main.wasm
 .cache
 .config
 go
+test/data
