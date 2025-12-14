@@ -1,8 +1,8 @@
-// Proof of Concept VSC Smart Contract in Golang
+// Example Magi contract in Golang
 //
-// Build command: tinygo build -o main.wasm -gc=custom -scheduler=none -panic=trap -no-debug -target=wasm-unknown main.go
+// Build command: tinygo build -gc=custom -scheduler=none -panic=trap -no-debug -target=wasm-unknown -o artifacts/main.wasm ./contract
+// Docker build command: docker run --rm -v $(pwd):/home/tinygo tinygo/tinygo:0.39.0 tinygo build -gc=custom -scheduler=none -panic=trap -no-debug -target=wasm-unknown -o artifacts/main.wasm ./contract
 // Inspect Output: wasmer inspect main.wasm
-// Run command (only works w/o SDK imports): wasmedge run main.wasm entrypoint 0
 //
 // Caveats:
 // - Go routines, channels, and defer are disabled
