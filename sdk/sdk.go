@@ -179,6 +179,7 @@ func ContractCall(contractId string, method string, payload string, options *Con
 	return contractCall(&contractId, &method, &payload, &optStr)
 }
 
+// Request a TSS key to be created. Algo must be either ecdsa or eddsa.
 func TssCreateKey(keyId string, algo string) string {
 	if algo != "ecdsa" && algo != "eddsa" {
 		Abort("algo must be ecdsa or eddsa")
@@ -187,10 +188,12 @@ func TssCreateKey(keyId string, algo string) string {
 	return *tssCreateKey(&keyId, &algo)
 }
 
+// Get details of a TSS key. Returns a comma-separated string consists of status, public key and algo.
 func TssGetKey(keyId string) string {
 	return *tssGetKey(&keyId)
 }
 
+// Request a digest to be signed by the TSS key.
 func TssSignKey(keyId string, bytes []byte) {
 	byteStr := hex.EncodeToString(bytes)
 
