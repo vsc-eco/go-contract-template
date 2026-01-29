@@ -32,7 +32,7 @@ func TestEntrypoint(t *testing.T) {
 		RequiredPostingAuths: []string{},
 	}
 
-	callResult, _, _ := ct.Call(stateEngine.TxVscCallContract{
+	callResult := ct.Call(stateEngine.TxVscCallContract{
 		Self:       txSelf,
 		ContractId: "vscmycontract",
 		Action:     "entrypoint",

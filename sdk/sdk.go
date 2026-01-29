@@ -194,8 +194,7 @@ func TssGetKey(keyId string) string {
 }
 
 // Request a digest to be signed by the TSS key.
-func TssSignKey(keyId string, bytes []byte) {
+func TssSignKey(keyId string, bytes []byte) string {
 	byteStr := hex.EncodeToString(bytes)
-
-	tssSignKey(&keyId, &byteStr)
+	return *tssSignKey(&keyId, &byteStr)
 }
