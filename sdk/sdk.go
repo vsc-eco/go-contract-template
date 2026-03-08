@@ -80,9 +80,23 @@ func StateSetObject(key string, value string) {
 	stateSetObject(&key, &value)
 }
 
+// Set a uint64 value by key in the contract state
+func StateSetU64(key string, value uint64) {
+	StateSetObject(key, string(u64ToBytes(value)))
+}
+
 // Get a value by key from the contract state
 func StateGetObject(key string) *string {
 	return stateGetObject(&key)
+}
+
+// Get a uint64 value by key from the contract state
+func StateGetU64(key string, value uint64) uint64 {
+	val := StateGetObject(key)
+	if val == nil || *val == "" {
+		return 0
+	}
+	return bytesToU64([]byte(*val))
 }
 
 // Delete or unset a value by key in the contract state
