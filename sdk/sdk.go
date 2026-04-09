@@ -8,10 +8,18 @@ import (
 	"github.com/CosmWasm/tinyjson"
 )
 
+// ===================================
+// Event logs
+// ===================================
+
 // Emit a log to the contract output
 func Log(s string) {
 	log(&s)
 }
+
+// ===================================
+// Abort/Revert Execution
+// ===================================
 
 // Aborts the contract execution
 func Abort(msg string) {
@@ -24,6 +32,10 @@ func Abort(msg string) {
 func Revert(msg string, symbol string) {
 	revert(&msg, &symbol)
 }
+
+// ===================================
+// Persistent State
+// ===================================
 
 // Set a value by key in the contract state
 func StateSetObject(key string, value string) {
@@ -54,6 +66,10 @@ func StateDeleteObject(key string) {
 	stateDeleteObject(&key)
 }
 
+// ===================================
+// Ephemeral State
+// ===================================
+
 // Set a value by key in the ephemeral contract state
 func EphemStateSetObject(key string, value string) {
 	ephemStateSetObject(&key, &value)
@@ -68,6 +84,10 @@ func EphemStateGetObject(contractId string, key string) *string {
 func EphemStateDeleteObject(key string) {
 	ephemStateDeleteObject(&key)
 }
+
+// ===================================
+// Contract Env
+// ===================================
 
 // Get current execution environment variables
 func GetEnv() Env {
@@ -105,6 +125,10 @@ func GetEnvKey(key string) *string {
 	return getEnvKey(&key)
 }
 
+// ===================================
+// Ledgers
+// ===================================
+
 // Get balance of an account
 func GetBalance(address Address, asset Asset) int64 {
 	addr := address.String()
@@ -140,6 +164,10 @@ func HiveWithdraw(to Address, amount int64, asset Asset) {
 	hiveWithdraw(&toaddr, &amt, &as)
 }
 
+// ===================================
+// Intercontract
+// ===================================
+
 // Get a value by key from the contract state of another contract
 func ContractStateGet(contractId string, key string) *string {
 	return contractRead(&contractId, &key)
@@ -157,6 +185,10 @@ func ContractCall(contractId string, method string, payload string, options *Con
 	}
 	return contractCall(&contractId, &method, &payload, &optStr)
 }
+
+// ===================================
+// TSS
+// ===================================
 
 // TssCreateKey creates a key with the maximum epoch lifespan of 365 epochs.
 // Deprecated: use TssCreateKeyForEpochs to specify a lifespan.
