@@ -8,60 +8,10 @@ import (
 	"github.com/CosmWasm/tinyjson"
 )
 
-//go:wasmimport sdk console.log
-func log(s *string) *string
-
+// Emit a log to the contract output
 func Log(s string) {
 	log(&s)
 }
-
-//go:wasmimport sdk db.set_object
-func stateSetObject(key *string, value *string) *string
-
-//go:wasmimport sdk db.get_object
-func stateGetObject(key *string) *string
-
-//go:wasmimport sdk db.rm_object
-func stateDeleteObject(key *string) *string
-
-//go:wasmimport sdk system.get_env
-func getEnv(arg *string) *string
-
-//go:wasmimport sdk system.get_env_key
-func getEnvKey(arg *string) *string
-
-//go:wasmimport sdk hive.get_balance
-func getBalance(arg1 *string, arg2 *string) *string
-
-//go:wasmimport sdk hive.draw
-func hiveDraw(arg1 *string, arg2 *string) *string
-
-//go:wasmimport sdk hive.transfer
-func hiveTransfer(arg1 *string, arg2 *string, arg3 *string) *string
-
-//go:wasmimport sdk hive.withdraw
-func hiveWithdraw(arg1 *string, arg2 *string, arg3 *string) *string
-
-//go:wasmimport sdk contracts.read
-func contractRead(contractId *string, key *string) *string
-
-//go:wasmimport sdk contracts.call
-func contractCall(contractId *string, method *string, payload *string, options *string) *string
-
-//go:wasmimport sdk tss.create_key
-func tssCreateKey(keyId *string, algo *string) *string
-
-//go:wasmimport sdk tss.sign_key
-func tssSignKey(keyId *string, msgId *string) *string
-
-//go:wasmimport sdk tss.get_key
-func tssGetKey(keyId *string) *string
-
-//go:wasmimport env abort
-func abort(msg, file *string, line, column *int32)
-
-//go:wasmimport env revert
-func revert(msg, symbol *string)
 
 // Aborts the contract execution
 func Abort(msg string) {
@@ -102,6 +52,21 @@ func StateGetU64(key string, value uint64) uint64 {
 // Delete or unset a value by key in the contract state
 func StateDeleteObject(key string) {
 	stateDeleteObject(&key)
+}
+
+// Set a value by key in the ephemeral contract state
+func EphemStateSetObject(key string, value string) {
+	ephemStateSetObject(&key, &value)
+}
+
+// Get a value by key from the ephemeral contract state
+func EphemStateGetObject(contractId string, key string) *string {
+	return ephemStateGetObject(&contractId, &key)
+}
+
+// Delete or unset a value by key in the ephemeral contract state
+func EphemStateDeleteObject(key string) {
+	ephemStateDeleteObject(&key)
 }
 
 // Get current execution environment variables
@@ -193,13 +158,30 @@ func ContractCall(contractId string, method string, payload string, options *Con
 	return contractCall(&contractId, &method, &payload, &optStr)
 }
 
-// Request a TSS key to be created. Algo must be either ecdsa or eddsa.
+// TssCreateKey creates a key with the maximum epoch lifespan of 365 epochs.
+// Deprecated: use TssCreateKeyForEpochs to specify a lifespan.
 func TssCreateKey(keyId string, algo string) string {
 	if algo != "ecdsa" && algo != "eddsa" {
 		Abort("algo must be ecdsa or eddsa")
 	}
 
 	return *tssCreateKey(&keyId, &algo)
+}
+
+// TssCreateKeyForEpochs creates a key that expires after the given number of epochs.
+func TssCreateKeyForEpochs(keyId string, algo string, epochs uint64) string {
+	if algo != "ecdsa" && algo != "eddsa" {
+		Abort("algo must be ecdsa or eddsa")
+	}
+	epochsStr := strconv.FormatUint(epochs, 10)
+	return *tssV2CreateKey(&keyId, &algo, &epochsStr)
+}
+
+// TssRenewKey extends the expiry of a key owned by this contract by additionalEpochs.
+// The key must be active or deprecated. Returns "renewed" on success.
+func TssRenewKey(keyId string, additionalEpochs uint64) string {
+	epochsStr := strconv.FormatUint(additionalEpochs, 10)
+	return *tssRenewKey(&keyId, &epochsStr)
 }
 
 // Get details of a TSS key. Returns a comma-separated string consists of status, public key and algo.
