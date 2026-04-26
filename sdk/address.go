@@ -29,7 +29,6 @@ type AddressType string
 
 const (
 	AddressTypeEVM     AddressType = "evm"
-	AddressTypeKey     AddressType = "key"
 	AddressTypeHive    AddressType = "hive"
 	AddressTypeSystem  AddressType = "system"
 	AddressTypeBLS     AddressType = "bls"
@@ -55,8 +54,6 @@ func (a Address) Domain() AddressDomain {
 func (a Address) Type() AddressType {
 	if strings.HasPrefix(a.String(), "did:pkh:eip155") {
 		return AddressTypeEVM
-	} else if strings.HasPrefix(a.String(), "did:key:") {
-		return AddressTypeKey
 	} else if strings.HasPrefix(a.String(), "hive:") {
 		return AddressTypeHive
 	} else if strings.HasPrefix(a.String(), "system:") {
@@ -64,7 +61,6 @@ func (a Address) Type() AddressType {
 	} else {
 		return AddressTypeUnknown
 	}
-	//TODO: Detect BLS address type, though it is not used or planned to be supported.
 }
 
 func (a Address) IsValid() bool {
