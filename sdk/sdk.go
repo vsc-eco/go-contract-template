@@ -126,6 +126,35 @@ func GetEnvKey(key string) *string {
 }
 
 // ===================================
+// System
+// ===================================
+
+// VerifyAddress classifies an address on the current network. Returns the
+// address domain — one of "user:hive", "user:evm", "user:btc", "contract",
+// "system", or "unknown" — so a contract can validate a recipient before
+// crediting it. The network (mainnet vs testnet) is taken from the host env.
+func VerifyAddress(address string) string {
+	return *verifyAddress(&address)
+}
+
+// SystemCall invokes another sdk method by "namespace.method" name with a
+// single JSON-encoded argument (e.g. `{"arg0":"..."}`), returning the callee's
+// result wrapped as `{"result":"..."}`. A generic escape hatch for host
+// methods without a dedicated wrapper.
+func SystemCall(name string, args string) *string {
+	return systemCall(&name, &args)
+}
+
+// PendulumApplySwapFees invokes the Magi pendulum fee engine for an HBD-paired
+// pool swap. Input and output are JSON-encoded per the contract integration
+// spec (PendulumSwapFeeInput / PendulumSwapFeeOutput) — the contract owns those
+// types; this is a thin marshalling shim. On any host error the runtime aborts
+// the contract, so this only returns on success.
+func PendulumApplySwapFees(input string) string {
+	return *pendulumApplySwapFees(&input)
+}
+
+// ===================================
 // Ledgers
 // ===================================
 
