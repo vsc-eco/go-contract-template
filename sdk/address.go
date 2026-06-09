@@ -15,6 +15,10 @@ type Sender struct {
 
 type ContractCallOptions struct {
 	Intents []Intent `json:"intents,omitempty"`
+	// Try opts into try/catch: a reverting callee returns a structured outcome
+	// instead of trapping the caller, and its state/ledger writes are rolled back.
+	// Requires chain consensus version >= 0.2.0. See TryContractCall.
+	Try bool `json:"try,omitempty"`
 }
 
 type AddressDomain string
