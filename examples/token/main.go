@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "contract-template/runtime"
+
 	"contract-template/sdk"
 	"strconv"
 	"strings"

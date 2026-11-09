@@ -1,7 +1,10 @@
 package sdk
 
+// NOTE: this package deliberately imports nothing from its own module, so the
+// whole sdk/ directory is byte-identical across every contract repo (see
+// scripts/sync-sdk.sh). The custom-GC runtime package is blank-imported by the
+// contract's main package instead.
 import (
-	_ "contract-template/runtime"
 	"encoding/hex"
 	"strconv"
 
