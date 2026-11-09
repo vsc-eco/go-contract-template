@@ -652,6 +652,15 @@ func tinyjson223cdf42EncodeContractTemplateSdk4(out *jwriter.Writer, in Contract
 			out.RawByte(']')
 		}
 	}
+	if in.Try {
+		if first {
+			out.RawString("\"try\":")
+			first = false
+		} else {
+			out.RawString(",\"try\":")
+		}
+		out.Bool(in.Try)
+	}
 	out.RawByte('}')
 }
 

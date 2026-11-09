@@ -15,6 +15,10 @@ type Sender struct {
 
 type ContractCallOptions struct {
 	Intents []Intent `json:"intents,omitempty"`
+	// Try opts into try/catch: a reverting callee returns a structured outcome
+	// instead of trapping the caller, and its state/ledger writes are rolled back.
+	// Requires chain consensus version >= 0.2.0. See TryContractCall.
+	Try bool `json:"try,omitempty"`
 }
 
 type AddressDomain string
@@ -28,11 +32,22 @@ const (
 type AddressType string
 
 const (
-	AddressTypeEVM     AddressType = "evm"
-	AddressTypeHive    AddressType = "hive"
-	AddressTypeSystem  AddressType = "system"
-	AddressTypeBLS     AddressType = "bls"
-	AddressTypeUnknown AddressType = "unknown"
+	AddressTypeEVM      AddressType = "evm"
+	AddressTypeHive     AddressType = "hive"
+	AddressTypeBTC      AddressType = "btc"
+	AddressTypeContract AddressType = "contract"
+	AddressTypeSystem   AddressType = "system"
+	AddressTypeBLS      AddressType = "bls"
+	AddressTypeUnknown  AddressType = "unknown"
+)
+
+// BTC addresses are did:pkh:bip122:<genesis-hash>: — mainnet and testnet differ
+// only in the chain id. The node classifies the one matching its own network as
+// "user:btc" and the other as "unknown"; the SDK cannot see which network it is
+// on, so it accepts both. Use VerifyAddress when the network matters.
+const (
+	btcMainnetDIDPrefix = "did:pkh:bip122:000000000019d6689c085ae165831e93:"
+	btcTestnetDIDPrefix = "did:pkh:bip122:000000000933ea01ad0ee984209779ba:"
 )
 
 type Address string
@@ -54,8 +69,13 @@ func (a Address) Domain() AddressDomain {
 func (a Address) Type() AddressType {
 	if strings.HasPrefix(a.String(), "did:pkh:eip155") {
 		return AddressTypeEVM
+	} else if strings.HasPrefix(a.String(), btcMainnetDIDPrefix) ||
+		strings.HasPrefix(a.String(), btcTestnetDIDPrefix) {
+		return AddressTypeBTC
 	} else if strings.HasPrefix(a.String(), "hive:") {
 		return AddressTypeHive
+	} else if strings.HasPrefix(a.String(), "contract:") {
+		return AddressTypeContract
 	} else if strings.HasPrefix(a.String(), "system:") {
 		return AddressTypeSystem
 	} else {

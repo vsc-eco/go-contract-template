@@ -17,7 +17,12 @@
 package main
 
 import (
-	_ "contract-template/sdk" // ensure sdk is imported
+	"encoding/hex"
+	"strconv"
+
+	// the custom-GC runtime must be linked in by the main package (the sdk
+	// package stays free of module-local imports so it can be copied verbatim)
+	_ "contract-template/runtime"
 
 	"contract-template/sdk"
 )
@@ -31,4 +36,33 @@ func Entrypoint(a *string) *string {
 	sdk.Log(*a)
 	// panic("test")
 	return a
+}
+
+// sdkprobe exercises the host functions that were added to the SDK after the
+// original template, so a `go test ./test/...` run proves the wrappers really
+// reach the node (a wrapper whose host function is missing would fail to
+// instantiate, and a mis-marshalled one returns the wrong bytes). It is a
+// template demo, not a required entrypoint — delete it in a real contract.
+//
+//go:wasmexport sdkprobe
+func SdkProbe(a *string) *string {
+	// crypto.keccak256 — known-answer test on the empty-input vector
+	hash := hex.EncodeToString(sdk.Keccak256([]byte("abc")))
+
+	// system.verify_address — host-side address classification
+	kind := sdk.VerifyAddress("hive:someone")
+
+	// db.set_object / get_object through the uint64 helpers
+	sdk.StateSetU64("probe:counter", 4096)
+	counter := sdk.StateGetU64("probe:counter", 0)
+
+	// ephem_db — per-block scratch state, dropped at the end of the block
+	sdk.EphemStateSetObject("probe:ephem", "ok")
+	ephem := ""
+	if v := sdk.EphemStateGetObject(sdk.GetEnv().ContractId, "probe:ephem"); v != nil {
+		ephem = *v
+	}
+
+	out := hash + "|" + kind + "|" + strconv.FormatUint(counter, 10) + "|" + ephem
+	return &out
 }

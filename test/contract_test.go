@@ -28,7 +28,7 @@ func TestEntrypoint(t *testing.T) {
 		Index:                69,
 		OpIndex:              0,
 		Timestamp:            "2025-09-03T00:00:00",
-		RequiredAuths:        []string{"did:key:someone"},
+		RequiredAuths:        []string{"hive:someone"},
 		RequiredPostingAuths: []string{},
 	}
 
